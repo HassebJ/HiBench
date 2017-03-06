@@ -40,6 +40,10 @@ class KafkaConsumer(zookeeperConnect: String, topic: String, partition: Int) {
   private var nextOffset: Long = earliestOffset
   private var iterator: Iterator[MessageAndOffset] = getIterator(nextOffset)
 
+  var latencySum = 0l;
+  var latencyCount = 0l;
+
+
   def next(): Array[Byte] = {
     val mo = iterator.next()
     val message = mo.message
@@ -89,10 +93,18 @@ class KafkaConsumer(zookeeperConnect: String, topic: String, partition: Int) {
         .addFetch(topic, partition, offset, config.fetchMessageMaxBytes)
         .build()
 
+    val requestStart = System.currentTimeMillis()
     val response = consumer.fetch(request)
+    val requestEnd = System.currentTimeMillis()
+    latencyCount+=1;
+    latencySum+= (requestEnd - requestStart)
+    println("Sum: " + latencySum + "Count:" + latencyCount)
     response.errorCode(topic, partition) match {
       case NoError => response.messageSet(topic, partition).iterator
       case error => throw exceptionFor(error)
     }
+
+
+
   }
 }
