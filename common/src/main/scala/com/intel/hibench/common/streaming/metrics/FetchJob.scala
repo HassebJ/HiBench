@@ -35,6 +35,9 @@ class FetchJob(zkConnect: String, topic: String, partition: Int,
       histogram.update(Math.max(0, endTime - startTime))
       result.update(startTime, endTime)
     }
+    val latencyValues = consumer.returnLatencyValue();
+    print("Latency Sum: " + latencyValues._1 + "Latency Count:" + latencyValues._2
+          + "NumRecords: " + latencyValues._3 )
     println(s"Collected ${result.count} results for partition: ${partition}")
     result
   }

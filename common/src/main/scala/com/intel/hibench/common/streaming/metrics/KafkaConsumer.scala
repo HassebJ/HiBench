@@ -41,7 +41,12 @@ class KafkaConsumer(zookeeperConnect: String, topic: String, partition: Int) {
   private var iterator: Iterator[MessageAndOffset] = getIterator(nextOffset)
 
   var latencySum = 0l;
-  var latencyCount = 0l;
+  var requestCount = 0l;
+  var iterRecordsCount = 0l;
+  
+  def returnLatencyValue(): (Long, Long, Long) ={
+    (latencySum, requestCount, iterRecordsCount)
+  }
 
 
   def next(): Array[Byte] = {
@@ -89,10 +94,11 @@ class KafkaConsumer(zookeeperConnect: String, topic: String, partition: Int) {
     }
   }
 
-  private def updateLatencyData( requestStart: Long, requestEnd: Long): Unit = synchronized {
-    latencyCount+=1;
+  private def updateLatencyData( requestStart: Long, requestEnd: Long, iter: Iterator[MessageAndOffset] ): Unit = synchronized {
+    requestCount+=1;
     latencySum+= (requestEnd - requestStart)
-    println("Sum: " + latencySum + " Count:" + latencyCount + " NumRecords: " + 0 + " Partition: " + partition)
+    iterRecordsCount+= iter.length
+//    println("Sum: " + latencySum + " Count:" + requestCount + " NumRecords: " + 0 + " Partition: " + partition)
   }
 
   private def getIterator(offset: Long): Iterator[MessageAndOffset] = {
@@ -104,14 +110,15 @@ class KafkaConsumer(zookeeperConnect: String, topic: String, partition: Int) {
     val response = consumer.fetch(request)
     val requestEnd = System.currentTimeMillis()
 
-    updateLatencyData( requestStart, requestEnd)
+
 
 
     response.errorCode(topic, partition) match {
       case NoError => {
         response.messageSet(topic, partition).iterator
         val (iter1, iter2 ) = response.messageSet(topic, partition).iterator.duplicate
-        println("NumRecords: " + iter1.length)
+        updateLatencyData( requestStart, requestEnd, iter1)
+//        println("NumRecords: " + iter1.length)
         iter2
       }
       case error => throw exceptionFor(error)
