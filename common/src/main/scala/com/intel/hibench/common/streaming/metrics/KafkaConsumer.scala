@@ -36,14 +36,14 @@ class KafkaConsumer(zookeeperConnect: String, topic: String, partition: Int) {
   private val consumer = createConsumer
 
   private val earliestOffset = consumer
-      .earliestOrLatestOffset(TopicAndPartition(topic, partition), OffsetRequest.EarliestTime, -1)
+    .earliestOrLatestOffset(TopicAndPartition(topic, partition), OffsetRequest.EarliestTime, -1)
   private var nextOffset: Long = earliestOffset
   private var iterator: Iterator[MessageAndOffset] = getIterator(nextOffset)
 
   var latencySum = 0l;
   var requestCount = 0l;
   var iterRecordsCount = 0l;
-  
+
   def returnLatencyValue(): (Long, Long, Long) ={
     (latencySum, requestCount, iterRecordsCount)
   }
@@ -76,14 +76,14 @@ class KafkaConsumer(zookeeperConnect: String, topic: String, partition: Int) {
   }
 
   private def createConsumer: SimpleConsumer = {
-//    println("Topic: " + topic + " Partition: " + partition)
+    //    println("Topic: " + topic + " Partition: " + partition)
     val zkClient = new ZkClient(zookeeperConnect, 6000, 6000, ZKStringSerializer)
     try {
       val leader = ZkUtils.getLeaderForPartition(zkClient, topic, partition)
-          .getOrElse(throw new RuntimeException(
-            s"leader not available for TopicAndPartition($topic, $partition)"))
+        .getOrElse(throw new RuntimeException(
+        s"leader not available for TopicAndPartition($topic, $partition)"))
       val broker = ZkUtils.getBrokerInfo(zkClient, leader)
-          .getOrElse(throw new RuntimeException(s"broker info not found for leader $leader"))
+        .getOrElse(throw new RuntimeException(s"broker info not found for leader $leader"))
       new SimpleConsumer(broker.host, broker.port,
         config.socketTimeoutMs, config.socketReceiveBufferBytes, CLIENT_ID)
     } catch {
@@ -98,13 +98,14 @@ class KafkaConsumer(zookeeperConnect: String, topic: String, partition: Int) {
     requestCount+=1;
     latencySum+= (requestEnd - requestStart)
     iterRecordsCount+= iter.length
-//    println("Sum: " + latencySum + " Count:" + requestCount + " NumRecords: " + 0 + " Partition: " + partition)
+
+    println("Consumer => Sum: " + latencySum + " Count:" + requestCount + " NumRecords: " + iter.length + " Partition: " + partition)
   }
 
   private def getIterator(offset: Long): Iterator[MessageAndOffset] = {
     val request = new FetchRequestBuilder()
-        .addFetch(topic, partition, offset, config.fetchMessageMaxBytes)
-        .build()
+      .addFetch(topic, partition, offset, config.fetchMessageMaxBytes)
+      .build()
 
     val requestStart = System.currentTimeMillis()
     val response = consumer.fetch(request)
@@ -118,7 +119,7 @@ class KafkaConsumer(zookeeperConnect: String, topic: String, partition: Int) {
         response.messageSet(topic, partition).iterator
         val (iter1, iter2 ) = response.messageSet(topic, partition).iterator.duplicate
         updateLatencyData( requestStart, requestEnd, iter1)
-//        println("NumRecords: " + iter1.length)
+        //        println("NumRecords: " + iter1.length)
         iter2
       }
       case error => throw exceptionFor(error)
