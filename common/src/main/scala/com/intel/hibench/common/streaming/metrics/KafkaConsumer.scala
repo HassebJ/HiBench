@@ -71,6 +71,7 @@ class KafkaConsumer(zookeeperConnect: String, topic: String, partition: Int) {
   }
 
   private def createConsumer: SimpleConsumer = {
+    println("Topic: " + topic + " Partition: " + partition)
     val zkClient = new ZkClient(zookeeperConnect, 6000, 6000, ZKStringSerializer)
     try {
       val leader = ZkUtils.getLeaderForPartition(zkClient, topic, partition)
@@ -98,9 +99,12 @@ class KafkaConsumer(zookeeperConnect: String, topic: String, partition: Int) {
     val requestEnd = System.currentTimeMillis()
     latencyCount+=1;
     latencySum+= (requestEnd - requestStart)
-    println("Sum: " + latencySum + "Count:" + latencyCount)
+
     response.errorCode(topic, partition) match {
       case NoError => response.messageSet(topic, partition).iterator
+        val ( iter1, iter2) = iterator.duplicate
+        println("Sum: " + latencySum + " Count:" + latencyCount + "NumRecords: " + iter1)
+        iter2
       case error => throw exceptionFor(error)
     }
 
