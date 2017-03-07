@@ -76,7 +76,7 @@ class KafkaConsumer(zookeeperConnect: String, topic: String, partition: Int) {
   }
 
   private def createConsumer: SimpleConsumer = {
-    println("Topic: " + topic + " Partition: " + partition)
+//    println("Topic: " + topic + " Partition: " + partition)
     val zkClient = new ZkClient(zookeeperConnect, 6000, 6000, ZKStringSerializer)
     try {
       val leader = ZkUtils.getLeaderForPartition(zkClient, topic, partition)
