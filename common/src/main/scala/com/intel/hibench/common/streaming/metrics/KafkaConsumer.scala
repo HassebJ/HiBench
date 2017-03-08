@@ -99,7 +99,7 @@ class KafkaConsumer(zookeeperConnect: String, topic: String, partition: Int) {
     latencySum+= (requestEnd - requestStart)
     iterRecordsCount+= iter.length
 
-    println("Consumer => Sum: " + latencySum + " Count:" + requestCount + " NumRecords: " + iter.length + " Partition: " + partition)
+//    println("Consumer => Sum: " + latencySum + " Count:" + requestCount + " NumRecords: " + iter.length + " Partition: " + partition)
   }
 
   private def getIterator(offset: Long): Iterator[MessageAndOffset] = {
