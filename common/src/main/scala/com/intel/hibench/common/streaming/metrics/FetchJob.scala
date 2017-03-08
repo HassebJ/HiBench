@@ -40,8 +40,8 @@ class FetchJob(zkConnect: String, topic: String, partition: Int,
         result.update(startTime, endTime)
     }
     val latencyValues = consumer.returnLatencyValue();
-    print("Fetch Job => Latency Sum: " + latencyValues._1 + " Request Count:" + latencyValues._2
-      + "NumRecords: " + latencyValues._3 )
+    println("Fetch Job => Latency Sum: " + latencyValues._1 + " Request Count:" + latencyValues._2
+      + " NumRecords: " + latencyValues._3 )
     println(s"Collected ${result.count} results for partition: ${partition}")
     result
   }
