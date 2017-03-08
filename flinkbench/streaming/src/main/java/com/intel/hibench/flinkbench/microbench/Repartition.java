@@ -17,6 +17,7 @@
 
 package com.intel.hibench.flinkbench.microbench;
 
+import com.intel.hibench.common.streaming.UserVisitParser;
 import com.intel.hibench.flinkbench.datasource.StreamBase;
 import com.intel.hibench.flinkbench.util.FlinkBenchConfig;
 
@@ -38,17 +39,26 @@ public class Repartition extends StreamBase {
     createDataStream(config);
     DataStream<Tuple2<String, String>> dataStream = env.addSource(getDataStream());
 
-    dataStream.rebalance().map(
-        new MapFunction<Tuple2<String, String>, Tuple2<String, String>>() {
+    dataStream.map(
+            new MapFunction<Tuple2<String, String>, Tuple2<String, Long>>() {
+        @Override
+        public Tuple2<String, Long> map(Tuple2<String, String> input) throws Exception {
+//            String ip = UserVisitParser.parse(input.f1).getIp();
+            //map record to <browser, <timeStamp, 1>> type
+            System.out.println("Before Rebalance: " + System.currentTimeMillis());
+            return new Tuple2<String, Long>( input.f1, System.currentTimeMillis());
+        }
+    }).rebalance().map(
+            new MapFunction<Tuple2<String, Long>, Tuple2<String, Long>>() {
 
-          @Override
-          public Tuple2<String, String> map(Tuple2<String, String> value) throws Exception {
-            KafkaReporter kafkaReporter = new KafkaReporter(config.reportTopic, config.brokerList);
-
-            kafkaReporter.report(Long.parseLong(value.f0), System.currentTimeMillis());
-            return value;
-          }
-        });
+                @Override
+                public Tuple2<String, Long> map(Tuple2<String, Long> value) throws Exception {
+                    KafkaReporter kafkaReporter = new KafkaReporter(config.reportTopic, config.brokerList);
+                    System.out.println("After Rebalance :" + System.currentTimeMillis());
+                    kafkaReporter.report(value.f1, System.currentTimeMillis());
+                    return value;
+                }
+            });
 
 
     env.execute("Repartition Job");
