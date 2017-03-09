@@ -34,7 +34,7 @@ public class FixedWindow extends StreamBase {
       public Tuple2<String, Tuple2<Long, Integer>> map(Tuple2<String, String> value) throws Exception {
 
         String ip = UserVisitParser.parse(value.f1).getIp();
-        return new Tuple2<String, Tuple2<Long, Integer>>(ip, new Tuple2<Long, Integer>(Long.parseLong(value.f0), 1));
+        return new Tuple2<String, Tuple2<Long, Integer>>(ip, new Tuple2<Long, Integer>(System.currentTimeMillis(), 1));
       }
     })
         .keyBy(0)
