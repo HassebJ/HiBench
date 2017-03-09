@@ -16,3 +16,6 @@ report/
 .settings/
 conf/hadoop.conf
 conf/spark.conf
+conf/hibench.conf
+conf/flink.conf
+conf/*

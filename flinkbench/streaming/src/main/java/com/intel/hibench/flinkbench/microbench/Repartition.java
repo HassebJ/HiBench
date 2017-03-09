@@ -55,9 +55,9 @@ public class Repartition extends StreamBase {
                 public Tuple2<String, Long> map(Tuple2<String, Long> value) throws Exception {
                     KafkaReporter kafkaReporter = new KafkaReporter(config.reportTopic, config.brokerList);
                     long time = System.currentTimeMillis();
-                    System.out.println("Latency :" + ( System.currentTimeMillis() - time) + " ms");
+                    System.out.println("Latency :" + (  time- value.f1) + " ms");
 
-                    kafkaReporter.report(value.f1, System.currentTimeMillis());
+                    kafkaReporter.report(value.f1, time);
                     return value;
                 }
             });
