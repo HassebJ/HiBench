@@ -34,6 +34,7 @@ public class FixedWindow extends StreamBase {
       public Tuple2<String, Tuple2<Long, Integer>> map(Tuple2<String, String> value) throws Exception {
 
         String ip = UserVisitParser.parse(value.f1).getIp();
+        //replacing the record event time with current time to get latency for just the flink primitives
         return new Tuple2<String, Tuple2<Long, Integer>>(ip, new Tuple2<Long, Integer>(System.currentTimeMillis(), 1));
       }
     })
