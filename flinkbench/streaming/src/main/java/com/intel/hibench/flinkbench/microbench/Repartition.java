@@ -45,7 +45,7 @@ public class Repartition extends StreamBase {
         public Tuple2<String, Long> map(Tuple2<String, String> input) throws Exception {
 //            String ip = UserVisitParser.parse(input.f1).getIp();
             //map record to <browser, <timeStamp, 1>> type
-            System.out.println("Before Rebalance: " + System.currentTimeMillis());
+//            System.out.println("Before Rebalance: " + System.currentTimeMillis());
             return new Tuple2<String, Long>( input.f1, System.currentTimeMillis());
         }
     }).rebalance().map(
@@ -54,7 +54,9 @@ public class Repartition extends StreamBase {
                 @Override
                 public Tuple2<String, Long> map(Tuple2<String, Long> value) throws Exception {
                     KafkaReporter kafkaReporter = new KafkaReporter(config.reportTopic, config.brokerList);
-                    System.out.println("After Rebalance :" + System.currentTimeMillis());
+                    long time = System.currentTimeMillis();
+                    System.out.println("Latency :" + ( System.currentTimeMillis() - time) + " ms");
+
                     kafkaReporter.report(value.f1, System.currentTimeMillis());
                     return value;
                 }

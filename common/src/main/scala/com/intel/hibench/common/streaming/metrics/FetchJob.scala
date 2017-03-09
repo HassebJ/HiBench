@@ -22,26 +22,19 @@ import java.util.concurrent.Callable
 import com.codahale.metrics.Histogram
 
 class FetchJob(zkConnect: String, topic: String, partition: Int,
-               histogram: Histogram) extends Callable[FetchJobResult] {
+    histogram: Histogram) extends Callable[FetchJobResult] {
 
   override def call(): FetchJobResult = {
     val result = new FetchJobResult()
     val consumer = new KafkaConsumer(zkConnect, topic, partition)
     while (consumer.hasNext) {
-      val startTime = System.currentTimeMillis()
-        val times = new String(consumer.next(), "UTF-8").split(":")
-//        val startTime = times(0).toLong
-//        val endTime = times(1).toLong
-
-
-      val endTime = System.currentTimeMillis()
-//       correct negative value which might be caused by difference of system time
-        histogram.update(Math.max(0, endTime - startTime))
-        result.update(startTime, endTime)
+      val times = new String(consumer.next(), "UTF-8").split(":")
+      val startTime = times(0).toLong
+      val endTime = times(1).toLong
+      // correct negative value which might be caused by difference of system time
+      histogram.update(Math.max(0, endTime - startTime))
+      result.update(startTime, endTime)
     }
-    val latencyValues = consumer.returnLatencyValue();
-    println("Fetch Job => Latency Sum: " + latencyValues._1 + " Request Count:" + latencyValues._2
-      + " NumRecords: " + latencyValues._3 )
     println(s"Collected ${result.count} results for partition: ${partition}")
     result
   }
