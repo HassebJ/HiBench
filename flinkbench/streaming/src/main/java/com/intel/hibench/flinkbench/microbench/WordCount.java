@@ -44,26 +44,28 @@ public class WordCount extends StreamBase {
     createDataStream(config);
     DataStream<Tuple2<String, String>> dataStream = env.addSource(getDataStream());
     dataStream
-        .map(new MapFunction<Tuple2<String, String>, Tuple2<String, Tuple2<String, Integer>>>() {
+        .map(new MapFunction<Tuple2<String, String>, Tuple2<String,  Tuple2< Tuple2<String, Integer>, String>   >>() {
           @Override
-          public Tuple2<String, Tuple2<String, Integer>> map(Tuple2<String, String> input) throws Exception {
+          public Tuple2<String,  Tuple2< Tuple2<String, Integer>, String>> map(Tuple2<String, String> input) throws Exception {
             String ip = UserVisitParser.parse(input.f1).getIp();
             //map record to <browser, <timeStamp, 1>> type
-            return new Tuple2<String, Tuple2<String, Integer>>(ip, new Tuple2<String, Integer>(Long.toString(System.currentTimeMillis()), 1));
+              Tuple2<String, Integer> timesatmpCount = new Tuple2<String, Integer>(Long.toString(System.currentTimeMillis()), 1);
+              Tuple2< Tuple2<String, Integer>, String> timesatmpCpuntKey = new Tuple2< Tuple2<String, Integer>, String>( timesatmpCount, input.f1);
+            return new Tuple2<String,  Tuple2< Tuple2<String, Integer>, String>   >(ip, timesatmpCpuntKey );
           }
         })
         .keyBy(0)
-        .map(new RichMapFunction<Tuple2<String, Tuple2<String, Integer>>, Tuple2<String, Tuple2<String, Integer>>>() {
+        .map(new RichMapFunction<Tuple2<String,  Tuple2< Tuple2<String, Integer>, String>   >, Tuple2<String,  Tuple2< Tuple2<String, Integer>, String>   >>() {
           private transient ValueState<Integer> sum;
 
           @Override
-          public Tuple2<String, Tuple2<String, Integer>> map(Tuple2<String, Tuple2<String, Integer>> input) throws Exception {
+          public Tuple2<String,  Tuple2< Tuple2<String, Integer>, String>   >map(Tuple2<String,  Tuple2< Tuple2<String, Integer>, String>   >input) throws Exception {
             int currentSum = sum.value();
-            currentSum += input.f1.f1;
+            currentSum += input.f1.f0.f1;
             sum.update(currentSum);
             KafkaReporter kafkaReporter = new KafkaReporter(config.reportTopic, config.brokerList);
-            kafkaReporter.report(Long.parseLong(input.f1.f0), System.currentTimeMillis());
-            return new Tuple2<String, Tuple2<String, Integer>>(input.f0, new Tuple2<String, Integer>(input.f1.f0, currentSum));
+            kafkaReporter.report(Long.parseLong(input.f1.f0.f0), System.currentTimeMillis());
+            return new Tuple2<String, Tuple2< Tuple2<String, Integer>, String>>("check", new Tuple2< Tuple2<String, Integer>, String>( new Tuple2<String, Integer>(input.f1.f0.f0, currentSum), input.f0));
           }
 
           @Override

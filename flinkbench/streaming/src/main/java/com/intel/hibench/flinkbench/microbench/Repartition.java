@@ -22,6 +22,7 @@ import com.intel.hibench.flinkbench.datasource.StreamBase;
 import com.intel.hibench.flinkbench.util.FlinkBenchConfig;
 
 import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.java.tuple.Tuple;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -40,25 +41,25 @@ public class Repartition extends StreamBase {
     DataStream<Tuple2<String, String>> dataStream = env.addSource(getDataStream());
 
     dataStream.map(
-            new MapFunction<Tuple2<String, String>, Tuple2<String, Long>>() {
+            new MapFunction<Tuple2<String, String>, Tuple2<Tuple2<String, String>, Long>>() {
         @Override
-        public Tuple2<String, Long> map(Tuple2<String, String> input) throws Exception {
+        public Tuple2<Tuple2<String, String>, Long> map(Tuple2<String, String> input) throws Exception {
 //            String ip = UserVisitParser.parse(input.f1).getIp();
             //map record to <browser, <timeStamp, 1>> type
 //            System.out.println("Before Rebalance: " + System.currentTimeMillis());
-            return new Tuple2<String, Long>( input.f1, System.currentTimeMillis());
+            return new Tuple2<Tuple2<String, String>, Long>( input, System.currentTimeMillis());
         }
     }).rebalance().map(
-            new MapFunction<Tuple2<String, Long>, Tuple2<String, Long>>() {
+            new MapFunction<Tuple2<Tuple2<String, String>, Long>, Tuple2<String, Long>>() {
 
                 @Override
-                public Tuple2<String, Long> map(Tuple2<String, Long> value) throws Exception {
+                public Tuple2<String, Long> map(Tuple2<Tuple2<String, String>, Long> value) throws Exception {
                     KafkaReporter kafkaReporter = new KafkaReporter(config.reportTopic, config.brokerList);
                     long time = System.currentTimeMillis();
                     System.out.println("Latency :" + (  time- value.f1) + " ms");
 
                     kafkaReporter.report(value.f1, time);
-                    return value;
+                    return new Tuple2<String, Long>("Latency: " , (  time- value.f1));
                 }
             });
 
