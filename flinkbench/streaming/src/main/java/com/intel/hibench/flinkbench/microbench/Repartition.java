@@ -36,7 +36,7 @@ public class Repartition extends StreamBase {
     env.setBufferTimeout(config.bufferTimeout);
 
     createDataStream(config);
-    DataStream<Tuple2<String, String>> dataStream = env.addSource(getDataStream());
+    DataStream<Tuple2<String, String>> dataStream = env.addSource(getDataStream()).setParallelism(4);
 
     dataStream.rebalance().map(
         new MapFunction<Tuple2<String, String>, Tuple2<String, String>>() {

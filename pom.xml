@@ -113,6 +113,13 @@
 
   <profiles>
     <profile>
+      <id>autogen</id>
+      <modules>
+        <module>autogen</module>
+      </modules>
+    </profile>
+
+    <profile>
       <id>sparkbench</id>
       <modules>
         <module>sparkbench</module>

@@ -22,9 +22,10 @@ import java.util.Date
 import java.util.concurrent.{TimeUnit, Future, Executors}
 
 import com.codahale.metrics.{UniformReservoir, Histogram}
-import kafka.utils.{ZKStringSerializer, ZkUtils}
+import kafka.utils.ZKStringSerializer$
+import kafka.utils.ZkUtils
 import org.I0Itec.zkclient.ZkClient
-
+import org.I0Itec.zkclient.ZkConnection
 import scala.collection.mutable.ArrayBuffer
 
 
@@ -60,9 +61,11 @@ class KafkaCollector(zkConnect: String, metricsTopic: String,
   }
 
   private def getPartitions(topic: String, zkConnect: String): Seq[Int] = {
-    val zkClient = new ZkClient(zkConnect, 6000, 6000, ZKStringSerializer)
+    val zkClient = new ZkClient(zkConnect, 6000, 6000, ZKStringSerializer$.MODULE$)
     try {
-      ZkUtils.getPartitionsForTopics(zkClient, Seq(topic)).flatMap(_._2).toSeq
+      val zkUtils =  new ZkUtils(zkClient, new ZkConnection(zkConnect), false)
+   zkUtils.getPartitionsForTopics(Seq(topic)).flatMap(_._2).toSeq   
+// ZkUtils.getPartitionsForTopics(Seq(topic)).flatMap(_._2).toSeq
     } finally {
       zkClient.close()
     }

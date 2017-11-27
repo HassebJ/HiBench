@@ -18,9 +18,10 @@ package com.intel.hibench.common.streaming.metrics
 
 import com.intel.hibench.common.streaming.Platform
 import kafka.admin.AdminUtils
-import kafka.utils.ZKStringSerializer
+import kafka.utils.ZKStringSerializer$
+import kafka.utils.ZkUtils
 import org.I0Itec.zkclient.ZkClient
-
+import org.I0Itec.zkclient.ZkConnection
 object MetricsUtil {
 
   val TOPIC_CONF_FILE_NAME = "metrics_topic.conf"
@@ -34,10 +35,12 @@ object MetricsUtil {
   }
 
   def createTopic(zkConnect: String, topic: String, partitions: Int): Unit = {
-    val zkClient = new ZkClient(zkConnect, 6000, 6000, ZKStringSerializer)
-    try {
-      AdminUtils.createTopic(zkClient, topic, partitions, 1)
-      while (!AdminUtils.topicExists(zkClient, topic)) {
+//    val zkClient = new ZkClient(zkConnect, 6000, 6000, ZKStringSerializer)
+	val zkClient = new ZkClient(zkConnect, 6000, 6000, ZKStringSerializer$.MODULE$)
+        val zkUtils =  new ZkUtils(zkClient, new ZkConnection(zkConnect), false)  
+  try {
+      AdminUtils.createTopic(zkUtils, topic, partitions, 1)
+      while (!AdminUtils.topicExists(zkUtils, topic)) {
         Thread.sleep(100)
       }
     } catch {

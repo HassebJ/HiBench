@@ -22,7 +22,7 @@ import com.intel.hibench.flinkbench.util.FlinkBenchConfig;
 
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
-import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer08;
+import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer010;
 
 import java.util.Properties;
 
@@ -40,9 +40,9 @@ public abstract class StreamBase {
     properties.setProperty("zookeeper.connect", config.zkHost);
     properties.setProperty("group.id", config.consumerGroup);
     properties.setProperty("bootstrap.servers", config.brokerList);
-    properties.setProperty("auto.offset.reset", config.offsetReset);
+//    properties.setProperty("auto.offset.reset", config.offsetReset);
 
-    this.dataStream = new FlinkKafkaConsumer08<Tuple2<String, String>>(
+    this.dataStream = new FlinkKafkaConsumer010<Tuple2<String, String>>(
         config.topic,
         new KeyedTupleSchema(),
         properties);

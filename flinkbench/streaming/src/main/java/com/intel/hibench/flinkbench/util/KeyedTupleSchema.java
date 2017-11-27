@@ -32,6 +32,11 @@ public class KeyedTupleSchema implements KeyedSerializationSchema<Tuple2<String,
   }
 
   @Override
+  public String getTargetTopic(Tuple2<String,String> element){
+ 	return null;
+  }
+
+  @Override
   public TypeInformation<Tuple2<String, String>> getProducedType() {
     return new TupleTypeInfo<Tuple2<String, String>>(TypeExtractor.createTypeInfo(String.class), TypeExtractor.createTypeInfo(String.class));
   }
