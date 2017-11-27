@@ -29,7 +29,7 @@ import org.I0Itec.zkclient.ZkConnection
 import scala.collection.mutable.ArrayBuffer
 
 
-class KafkaCollector(zkConnect: String, metricsTopic: String,
+class KafkaCollector(kafkaBrokers: String, zkConnect: String, metricsTopic: String,
     outputDir: String, sampleNumber: Int, desiredThreadNum: Int) extends LatencyCollector {
 
   private val histogram = new Histogram(new UniformReservoir(sampleNumber))
@@ -42,7 +42,7 @@ class KafkaCollector(zkConnect: String, metricsTopic: String,
     println("Starting MetricsReader for kafka topic: " + metricsTopic)
 
     partitions.foreach(partition => {
-      val job = new FetchJob(zkConnect, metricsTopic, partition, histogram)
+      val job = new FetchJob(kafkaBrokers, zkConnect, metricsTopic, partition, histogram)
       val fetchFeature = threadPool.submit(job)
       fetchResults += fetchFeature
     })

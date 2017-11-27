@@ -18,19 +18,20 @@ package com.intel.hibench.common.streaming.metrics
 
 import java.util.Properties
 
-import kafka.api.{OffsetRequest, FetchRequestBuilder}
+import kafka.api.{FetchRequestBuilder, OffsetRequest}
 import kafka.common.ErrorMapping._
 import kafka.common.TopicAndPartition
 import kafka.consumer.{ConsumerConfig, SimpleConsumer}
 import kafka.message.MessageAndOffset
-import kafka.utils.{ZKStringSerializer$, ZkUtils}//, Utils}
+import kafka.utils.{ZKStringSerializer$, ZkUtils}
 import org.I0Itec.zkclient.ZkClient
 import org.apache.kafka.common.utils.Utils
 import org.I0Itec.zkclient.ZkConnection
 import org.apache.kafka.common.protocol.SecurityProtocol
 import org.apache.kafka.common.network.ListenerName
+import org.apache.kafka.common.serialization.ByteArrayDeserializer
 
-class KafkaConsumer(zookeeperConnect: String, topic: String, partition: Int) {
+class KafkaConsumer(kafkaBrokers: String, zookeeperConnect: String, topic: String, partition: Int) {
 
   private val CLIENT_ID = "metrics_reader"
   private val props = new Properties()
@@ -39,48 +40,74 @@ class KafkaConsumer(zookeeperConnect: String, topic: String, partition: Int) {
   private val config = new ConsumerConfig(props)
   private val consumer = createConsumer
 
-  private val earliestOffset = consumer
-      .earliestOrLatestOffset(TopicAndPartition(topic, partition), OffsetRequest.EarliestTime, -1)
-  private var nextOffset: Long = earliestOffset
-  private var iterator: Iterator[MessageAndOffset] = getIterator(nextOffset)
+//  private val earliestOffset = consumer
+//      .earliestOrLatestOffset(TopicAndPartition(topic, partition), OffsetRequest.EarliestTime, -1)
+//  private var nextOffset: Long = earliestOffset
+//  private var iterator: Iterator[MessageAndOffset] = getIterator(nextOffset)
 
-  def next(): Array[Byte] = {
-    val mo = iterator.next()
-    val message = mo.message
+//  def next(): Array[Byte] = {
+//    val mo = iterator.next()
+//    val message = mo.message
+//
+//    nextOffset = mo.nextOffset
+//
+//    Utils.readBytes(message.payload)
+//  }
 
-    nextOffset = mo.nextOffset
-
-    Utils.readBytes(message.payload)
-  }
-
-  def hasNext: Boolean = {
-    @annotation.tailrec
-    def hasNextHelper(iter: Iterator[MessageAndOffset], newIterator: Boolean): Boolean = {
-      if (iter.hasNext) true
-      else if (newIterator) false
-      else {
-        iterator = getIterator(nextOffset)
-        hasNextHelper(iterator, newIterator = true)
-      }
-    }
-    hasNextHelper(iterator, newIterator = false)
-  }
+//  def hasNext: Boolean = {
+//    @annotation.tailrec
+//    def hasNextHelper(iter: Iterator[MessageAndOffset], newIterator: Boolean): Boolean = {
+//      if (iter.hasNext) true
+//      else if (newIterator) false
+//      else {
+//        iterator = getIterator(nextOffset)
+//        hasNextHelper(iterator, newIterator = true)
+//      }
+//    }
+//    hasNextHelper(iterator, newIterator = false)
+//  }
 
   def close(): Unit = {
     consumer.close()
   }
 
-  private def createConsumer: SimpleConsumer = {
+//  private def createConsumer: SimpleConsumer = {
+//    val zkClient = new ZkClient(zookeeperConnect, 6000, 6000, ZKStringSerializer$.MODULE$)
+//    try {
+//	val zkUtils =  new ZkUtils(zkClient, new ZkConnection(zookeeperConnect), false)
+//      val leader = zkUtils.getLeaderForPartition(topic, partition)
+//          .getOrElse(throw new RuntimeException(
+//            s"leader not available for TopicAndPartition($topic, $partition)"))
+//      val broker = zkUtils.getBrokerInfo( leader)
+//          .getOrElse(throw new RuntimeException(s"broker info not found for leader $leader"))
+//      new SimpleConsumer(broker.getBrokerEndPoint(new ListenerName("PLAINTEXT")).host, broker.getBrokerEndPoint(new ListenerName("PLAINTEXT")).port,
+//        config.socketTimeoutMs, config.socketReceiveBufferBytes, CLIENT_ID)
+//    } catch {
+//      case e: Exception =>
+//        throw e
+//    } finally {
+//      zkClient.close()
+//    }
+//  }
+
+  def createConsumer: org.apache.kafka.clients.consumer.KafkaConsumer[String, String] = {
     val zkClient = new ZkClient(zookeeperConnect, 6000, 6000, ZKStringSerializer$.MODULE$)
     try {
-	val zkUtils =  new ZkUtils(zkClient, new ZkConnection(zookeeperConnect), false)
+      val zkUtils =  new ZkUtils(zkClient, new ZkConnection(zookeeperConnect), false)
       val leader = zkUtils.getLeaderForPartition(topic, partition)
-          .getOrElse(throw new RuntimeException(
-            s"leader not available for TopicAndPartition($topic, $partition)"))
+        .getOrElse(throw new RuntimeException(
+          s"leader not available for TopicAndPartition($topic, $partition)"))
       val broker = zkUtils.getBrokerInfo( leader)
-          .getOrElse(throw new RuntimeException(s"broker info not found for leader $leader"))
-      new SimpleConsumer(broker.getBrokerEndPoint(new ListenerName("PLAINTEXT")).host, broker.getBrokerEndPoint(new ListenerName("PLAINTEXT")).port,
-        config.socketTimeoutMs, config.socketReceiveBufferBytes, CLIENT_ID)
+        .getOrElse(throw new RuntimeException(s"broker info not found for leader $leader"))
+
+      props.put("bootstrap.servers", kafkaBrokers)
+      props.put("group.id", CLIENT_ID)
+      props.put("auto.offset.reset", "earliest")
+      props.put("key.deserializer",classOf[ByteArrayDeserializer])
+      props.put("value.deserializer", classOf[ByteArrayDeserializer])
+      props.put("check.crcs", "false")
+
+      new org.apache.kafka.clients.consumer.KafkaConsumer(props)
     } catch {
       case e: Exception =>
         throw e
@@ -89,15 +116,15 @@ class KafkaConsumer(zookeeperConnect: String, topic: String, partition: Int) {
     }
   }
 
-  private def getIterator(offset: Long): Iterator[MessageAndOffset] = {
-    val request = new FetchRequestBuilder()
-        .addFetch(topic, partition, offset, config.fetchMessageMaxBytes)
-        .build()
-
-    val response = consumer.fetch(request)
-    response.error(topic, partition).code match {
-      case NoError => response.messageSet(topic, partition).iterator
-      case error => throw exceptionFor(error)
-    }
-  }
+//  private def getIterator(offset: Long): Iterator[MessageAndOffset] = {
+//    val request = new FetchRequestBuilder()
+//        .addFetch(topic, partition, offset, config.fetchMessageMaxBytes)
+//        .build()
+//
+//    val response = consumer.fetch(request)
+//    response.error(topic, partition).code match {
+//      case NoError => response.messageSet(topic, partition).iterator
+//      case error => throw exceptionFor(error)
+//    }
+//  }
 }

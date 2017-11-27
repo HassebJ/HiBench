@@ -21,20 +21,41 @@ import java.util.concurrent.Callable
 
 import com.codahale.metrics.Histogram
 
-class FetchJob(zkConnect: String, topic: String, partition: Int,
+class FetchJob(kafkaBrokers: String, zkConnect: String, topic: String, partition: Int,
     histogram: Histogram) extends Callable[FetchJobResult] {
 
   override def call(): FetchJobResult = {
     val result = new FetchJobResult()
-    val consumer = new KafkaConsumer(zkConnect, topic, partition)
-    while (consumer.hasNext) {
-      val times = new String(consumer.next(), "UTF-8").split(":")
-      val startTime = times(0).toLong
-      val endTime = times(1).toLong
-      // correct negative value which might be caused by difference of system time
-      histogram.update(Math.max(0, endTime - startTime))
-      result.update(startTime, endTime)
+    val consumer = new KafkaConsumer(kafkaBrokers, zkConnect, topic, partition).createConsumer
+    val timeout = 1000
+    var lastConsumedTime = System.currentTimeMillis
+    var currentTimeMillis = lastConsumedTime
+    while (currentTimeMillis - lastConsumedTime <= timeout) {
+      val records = consumer.poll(100).asScala
+      currentTimeMillis = System.currentTimeMillis
+      if (records != null) {
+        if (records.nonEmpty)
+          lastConsumedTime = currentTimeMillis
+        for (record <- records) {
+          if (record.value != null) {
+            val times = new String(record.value(), "UTF-8").split(":")
+            val startTime = times(0).toLong
+            val endTime = times(1).toLong
+            // correct negative value which might be caused by difference of system time
+            histogram.update(Math.max(0, endTime - startTime))
+            result.update(startTime, endTime)
+          }
+        }
+      }
     }
+//    while (consumer.hasNext) {
+//      val times = new String(consumer.next(), "UTF-8").split(":")
+//      val startTime = times(0).toLong
+//      val endTime = times(1).toLong
+//      // correct negative value which might be caused by difference of system time
+//      histogram.update(Math.max(0, endTime - startTime))
+//      result.update(startTime, endTime)
+//    }
     println(s"Collected ${result.count} results for partition: ${partition}")
     result
   }

@@ -183,6 +183,7 @@ HiBenchEnvPropMapping=dict(
     STREAMING_TOPIC_NAME="hibench.streambench.kafka.topic",
     STREAMING_KAFKA_HOME="hibench.streambench.kafka.home",
     STREAMING_ZKADDR="hibench.streambench.zkHost",
+    STREAMING_KAFKA_BROKERS="hibench.streambench.kafka.brokerList"
     STREAMING_CONSUMER_GROUP="hibench.streambench.kafka.consumerGroup",
     STREAMING_DATA_DIR="hibench.streambench.datagen.dir",
     STREAMING_DATA1_NAME="hibench.streambench.datagen.data1.name",
