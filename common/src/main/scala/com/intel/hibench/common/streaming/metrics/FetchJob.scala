@@ -64,14 +64,6 @@ class FetchJob(kafkaBrokers: String, zkConnect: String, topic: String, partition
     consumer.close()
     result
   }
-
-  def getString(sourceBytes: Array[Byte]) {
-    val deserializer: Option[Deserializer[_]] = None
-    val nonNullBytes = Option(sourceBytes).getOrElse("null".getBytes(StandardCharsets.UTF_8))
-    val convertedBytes = deserializer.map(_.deserialize(null, nonNullBytes).toString.
-      getBytes(StandardCharsets.UTF_8)).getOrElse(nonNullBytes)
-    output.write(convertedBytes)
-  }
 }
 
 class FetchJobResult(var minTime: Long, var maxTime: Long, var count: Long) {
