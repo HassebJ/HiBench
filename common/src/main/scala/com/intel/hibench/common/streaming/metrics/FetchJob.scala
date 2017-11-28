@@ -21,8 +21,6 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.Callable
 
 import com.codahale.metrics.Histogram
-import kafka.tools.ConsumerPerformance.output
-import org.apache.kafka.common.serialization.Deserializer
 
 class FetchJob(kafkaBrokers: String, zkConnect: String, topic: String, partition: Int,
     histogram: Histogram) extends Callable[FetchJobResult] {
