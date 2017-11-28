@@ -58,6 +58,7 @@ class FetchJob(kafkaBrokers: String, zkConnect: String, topic: String, partition
 //      result.update(startTime, endTime)
 //    }
     println(s"Collected ${result.count} results for partition: ${partition}")
+    consumer.close()
     result
   }
 }
