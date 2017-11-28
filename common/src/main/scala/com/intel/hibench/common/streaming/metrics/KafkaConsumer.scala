@@ -16,7 +16,7 @@
  */
 package com.intel.hibench.common.streaming.metrics
 
-import java.util.Properties
+import java.util.{Collections, Properties}
 
 import kafka.api.{FetchRequestBuilder, OffsetRequest}
 import kafka.common.ErrorMapping._
@@ -30,6 +30,8 @@ import org.I0Itec.zkclient.ZkConnection
 import org.apache.kafka.common.protocol.SecurityProtocol
 import org.apache.kafka.common.network.ListenerName
 import org.apache.kafka.common.serialization.ByteArrayDeserializer
+import org.apache.kafka.clients.consumer.Consumer
+
 
 class KafkaConsumer(kafkaBrokers: String, zookeeperConnect: String, topic: String, partition: Int) {
 
@@ -38,7 +40,7 @@ class KafkaConsumer(kafkaBrokers: String, zookeeperConnect: String, topic: Strin
   props.put("zookeeper.connect", zookeeperConnect)
   props.put("group.id", CLIENT_ID)
   private val config = new ConsumerConfig(props)
-  private val consumer = createConsumer
+//  private val consumer = createConsumer
 
 //  private val earliestOffset = consumer
 //      .earliestOrLatestOffset(TopicAndPartition(topic, partition), OffsetRequest.EarliestTime, -1)
@@ -67,9 +69,9 @@ class KafkaConsumer(kafkaBrokers: String, zookeeperConnect: String, topic: Strin
 //    hasNextHelper(iterator, newIterator = false)
 //  }
 
-  def close(): Unit = {
-    consumer.close()
-  }
+//  def close(): Unit = {
+//    consumer.close()
+//  }
 
 //  private def createConsumer: SimpleConsumer = {
 //    val zkClient = new ZkClient(zookeeperConnect, 6000, 6000, ZKStringSerializer$.MODULE$)
@@ -90,7 +92,7 @@ class KafkaConsumer(kafkaBrokers: String, zookeeperConnect: String, topic: Strin
 //    }
 //  }
 
-  def createConsumer: org.apache.kafka.clients.consumer.KafkaConsumer[String, String] = {
+  def createConsumer: Consumer[String, String] = {
     val zkClient = new ZkClient(zookeeperConnect, 6000, 6000, ZKStringSerializer$.MODULE$)
     try {
       val zkUtils =  new ZkUtils(zkClient, new ZkConnection(zookeeperConnect), false)
@@ -106,8 +108,11 @@ class KafkaConsumer(kafkaBrokers: String, zookeeperConnect: String, topic: Strin
       props.put("key.deserializer",classOf[ByteArrayDeserializer])
       props.put("value.deserializer", classOf[ByteArrayDeserializer])
       props.put("check.crcs", "false")
+      // Subscribe to the topic.
 
-      new org.apache.kafka.clients.consumer.KafkaConsumer(props)
+      val consumer : Consumer[String, String] = new org.apache.kafka.clients.consumer.KafkaConsumer[String, String](props)
+      consumer.subscribe(Collections.singletonList(topic))
+      consumer
     } catch {
       case e: Exception =>
         throw e
