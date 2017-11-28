@@ -17,9 +17,12 @@
 
 package com.intel.hibench.common.streaming.metrics
 
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.Callable
 
 import com.codahale.metrics.Histogram
+import kafka.tools.ConsumerPerformance.output
+import org.apache.kafka.common.serialization.Deserializer
 
 class FetchJob(kafkaBrokers: String, zkConnect: String, topic: String, partition: Int,
     histogram: Histogram) extends Callable[FetchJobResult] {
@@ -38,7 +41,7 @@ class FetchJob(kafkaBrokers: String, zkConnect: String, topic: String, partition
         while(iter.hasNext){
           val record = iter.next()
           if (record.value != null) {
-            val times = record.value().split(":")
+            val times = new String(record.value(), StandardCharsets.UTF_8).split(":")
             val startTime = times(0).toLong
             val endTime = times(1).toLong
             // correct negative value which might be caused by difference of system time
@@ -60,6 +63,14 @@ class FetchJob(kafkaBrokers: String, zkConnect: String, topic: String, partition
     println(s"Collected ${result.count} results for partition: ${partition}")
     consumer.close()
     result
+  }
+
+  def getString(sourceBytes: Array[Byte]) {
+    val deserializer: Option[Deserializer[_]] = None
+    val nonNullBytes = Option(sourceBytes).getOrElse("null".getBytes(StandardCharsets.UTF_8))
+    val convertedBytes = deserializer.map(_.deserialize(null, nonNullBytes).toString.
+      getBytes(StandardCharsets.UTF_8)).getOrElse(nonNullBytes)
+    output.write(convertedBytes)
   }
 }
 

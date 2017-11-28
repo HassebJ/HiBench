@@ -92,7 +92,7 @@ class KafkaConsumer(kafkaBrokers: String, zookeeperConnect: String, topic: Strin
 //    }
 //  }
 
-  def createConsumer: Consumer[String, String] = {
+  def createConsumer: Consumer[Array[Byte], Array[Byte]] = {
     val zkClient = new ZkClient(zookeeperConnect, 6000, 6000, ZKStringSerializer$.MODULE$)
     try {
       val zkUtils =  new ZkUtils(zkClient, new ZkConnection(zookeeperConnect), false)
@@ -110,7 +110,7 @@ class KafkaConsumer(kafkaBrokers: String, zookeeperConnect: String, topic: Strin
       props.put("check.crcs", "false")
       // Subscribe to the topic.
 
-      val consumer : Consumer[String, String] = new org.apache.kafka.clients.consumer.KafkaConsumer[String, String](props)
+      val consumer = new org.apache.kafka.clients.consumer.KafkaConsumer[Array[Byte], Array[Byte]](props)
       consumer.subscribe(Collections.singletonList(topic))
       consumer
     } catch {
