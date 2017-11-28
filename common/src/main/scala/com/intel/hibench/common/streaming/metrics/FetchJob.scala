@@ -31,19 +31,20 @@ class FetchJob(kafkaBrokers: String, zkConnect: String, topic: String, partition
     var lastConsumedTime = System.currentTimeMillis
     var currentTimeMillis = lastConsumedTime
     while (currentTimeMillis - lastConsumedTime <= timeout) {
-      val records = consumer.poll(100).asScala
+      val records = consumer.poll(100)//.asScala
       currentTimeMillis = System.currentTimeMillis
       if (records != null) {
-        if (records.nonEmpty)
-          lastConsumedTime = currentTimeMillis
-        for (record <- records) {
+        val iter = records.iterator()
+        while(iter.hasNext){
+          val record = iter.next()
           if (record.value != null) {
-            val times = new String(record.value(), "UTF-8").split(":")
+            val times = record.value().split(":")
             val startTime = times(0).toLong
             val endTime = times(1).toLong
             // correct negative value which might be caused by difference of system time
             histogram.update(Math.max(0, endTime - startTime))
             result.update(startTime, endTime)
+            lastConsumedTime = currentTimeMillis
           }
         }
       }
