@@ -16,6 +16,8 @@
  */
 package com.intel.hibench.common.streaming.metrics
 
+import java.util
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.{Collections, Properties}
 
 import kafka.api.{FetchRequestBuilder, OffsetRequest}
@@ -30,7 +32,8 @@ import org.I0Itec.zkclient.ZkConnection
 import org.apache.kafka.common.protocol.SecurityProtocol
 import org.apache.kafka.common.network.ListenerName
 import org.apache.kafka.common.serialization.ByteArrayDeserializer
-import org.apache.kafka.clients.consumer.Consumer
+import org.apache.kafka.clients.consumer.{Consumer, ConsumerRebalanceListener}
+import org.apache.kafka.common.TopicPartition
 
 
 class KafkaConsumer(kafkaBrokers: String, zookeeperConnect: String, topic: String, partition: Int) {
@@ -111,7 +114,25 @@ class KafkaConsumer(kafkaBrokers: String, zookeeperConnect: String, topic: Strin
       // Subscribe to the topic.
 
       val consumer = new org.apache.kafka.clients.consumer.KafkaConsumer[Array[Byte], Array[Byte]](props)
-      consumer.subscribe(Collections.singletonList(topic))
+//      consumer.subscribe(Collections.singletonList(topic))
+// Wait for group join, metadata fetch, etc
+      val joinTimeout = 10000
+      val isAssigned = new AtomicBoolean(false)
+      consumer.subscribe(Collections.singletonList(topic), new ConsumerRebalanceListener {
+        def onPartitionsAssigned(partitions: util.Collection[TopicPartition]) {
+          isAssigned.set(true)
+        }
+        def onPartitionsRevoked(partitions: util.Collection[TopicPartition]) {
+          isAssigned.set(false)
+        }})
+      val joinStart = System.currentTimeMillis()
+      while (!isAssigned.get()) {
+        if (System.currentTimeMillis() - joinStart >= joinTimeout) {
+          throw new Exception("Timed out waiting for initial group join.")
+        }
+        consumer.poll(100)
+      }
+      consumer.seekToBeginning(Collections.emptyList())
       consumer
     } catch {
       case e: Exception =>
