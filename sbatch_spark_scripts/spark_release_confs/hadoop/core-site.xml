@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+    <property>
+        <name>fs.default.name</name>
+        <value>hdfs://MASTER_REPLACE:9000</value>
+    </property>
+    <property>
+        <name>hadoop.ib.enabled</name>
+        <value>IB_ENABLED_REPLACE</value>
+    </property>
+    <property>
+        <name>rpc.ib.enabled</name>
+        <value>IB_ENABLED_REPLACE</value>
+    </property>
+    <property>
+        <name>roce.ib.enabled</name>
+        <value>false</value>
+    </property>
+    <property>
+        <name>yarn.app.mapreduce.am.env</name>
+        <value>LD_LIBRARY_PATH=${HADOOP_HOME}/lib/native</value>
+    </property>
+    <property>
+        <name>yarn.app.mapreduce.am.command-opts</name>
+        <value>-Xmx1024m -Dhadoop.conf.dir=${HADOOP_HOME}/etc/hadoop/</value>
+    </property>
+    <property>
+        <name>hadoop.tmp.dir</name>
+        <value>SSD_HADOOP_REPLACE</value>
+        <description>A base for other temporary
+            directories.</description>
+    </property>
+</configuration>

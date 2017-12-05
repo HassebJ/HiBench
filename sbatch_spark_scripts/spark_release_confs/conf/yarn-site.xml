@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+        <property>
+                <name>yarn.nodemanager.aux-services</name>
+                <value>mapreduce_shuffle</value>
+        </property>
+        <property>
+                <name>yarn.nodemanager.disk-health-checker.max-disk-utilization-per-disk-percentage</name>
+                <value>100.0</value>
+        </property>
+        <property>
+                <name>yarn.nodemanager.aux-services.mapreduce.shuffle.class</name>
+                <value>org.apache.hadoop.mapred.ShuffleHandler</value>
+        </property>
+        <property>
+                <name>yarn.resourcemanager.scheduler.address</name>
+                <value>storage01:8030</value>
+        </property>
+        <property>
+                <name>yarn.resourcemanager.address</name>
+                <value>storage01:8032</value>
+        </property>
+        <property>
+                <name>yarn.resourcemanager.webapp.address</name>
+                <value>storage01:8088</value>
+        </property>
+        <property>
+                <name>yarn.resourcemanager.resource-tracker.address</name>
+                <value>storage01:8031</value>
+        </property>
+        <property>
+                <name>yarn.resourcemanager.admin.address</name>
+                <value>storage01:8033</value>
+        </property>
+	 <property>
+                <name>yarn.nodemanager.resource.memory-mb</name>
+                <value>6000</value>
+        </property>
+        <property>
+                <name>yarn.scheduler.minimum-allocation-mb</name>
+                <value>1500</value>
+        </property>
+        <property>
+                <name>yarn.scheduler.maximum-allocation-mb</name>
+                <value>6000</value>
+        </property>
+</configuration>

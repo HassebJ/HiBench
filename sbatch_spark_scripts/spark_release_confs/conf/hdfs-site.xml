@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+        <property>
+                <name>dfs.namenode.name.dir</name>
+                <value>file:///home/runbot/hadoop2/install/devel/default/9f78e5635ea15e1c3c8b44016f16013b79cb418a//master_384325</value>
+        </property>
+        <property>
+                <name>dfs.datanode.data.dir</name>
+                <value>[RAM_DISK]file:/dev/shm/hadoop_buildbot_384325,[DISK]file:/tmp/runbot/hadoop_buildbot_384325</value>
+        </property>
+        <property>
+                <name>dfs.rdma.lustre.path</name>
+                <value></value>
+        </property>
+        <property>
+                <name>dfs.master</name>
+                <value>storage01</value>
+        </property>
+	<property>
+		<name>dfs.ib.enabled</name>
+		<value>true</value>
+	</property>
+	<property>
+		<name>dfs.datanode.dns.interface</name>
+		<value>ib0</value>
+	</property>
+	<property>
+		<name>dfs.datanode.dns.nameserver</name>
+		<value>ib0</value>
+	</property>
+	<property>
+		<name>dfs.blocksize</name>
+		<value>67108864</value>
+	</property>
+	<property>
+		<name>dfs.client-write-packet-size</name>
+		<value>524288</value>
+	</property>
+	<property>
+		<name>dfs.rdma.placement.policy</name>
+		<value>Greedy</value>
+	</property>
+</configuration>
